@@ -19,8 +19,11 @@ def _create_screen(content, name):
 
     screen = Screen(name=name)
     layout = BoxLayout(orientation='vertical')
+
     swap_button = Button(text='Swap Screen')
     swap_button.bind(on_release=lambda _: switch_screen(screen.manager))
+    swap_button.size_hint = (1.0, 0.1)
+
     layout.add_widget(swap_button)
     layout.add_widget(content)
     screen.add_widget(layout)
