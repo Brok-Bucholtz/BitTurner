@@ -1,10 +1,10 @@
 from kivy.uix.button import Button
-from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.config import Config
 from kivy.uix.screenmanager import ScreenManager, Screen
 
 from ui.editor import get_editor_layout
+from ui.job import get_job_layout
 
 Config.set('graphics', 'resizable', False)
 Config.set('graphics', 'width', '1100')
@@ -35,8 +35,8 @@ def build_main_ui():
 
     parent_layout = ScreenManager()
     editor_layout = get_editor_layout(start_code, start_inputs, start_outputs)
-    job_layout = BoxLayout(orientation='horizontal')
-    job_layout.add_widget(Label(text='TODO'))
+    job_layout = get_job_layout()
+
     parent_layout.add_widget(_create_screen(editor_layout, 'editor'))
     parent_layout.add_widget(_create_screen(job_layout, 'Jobs'))
 
