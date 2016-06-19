@@ -1,3 +1,7 @@
+from types import FunctionType
+from io import StringIO
+
+import sys
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.label import Label
@@ -30,6 +34,36 @@ def _create_screen(content, name):
     screen.add_widget(layout)
 
     return screen
+
+
+def _run_sandbox(code):
+    def sandbox():
+        # noinspection PyUnresolvedReferences
+        exec(exec_code)
+
+    codeOut = StringIO()
+    codeErr = StringIO()
+    sys.stdout = codeOut
+    sys.stderr = codeErr
+
+    scope = {'__builtins__': __builtins__, 'exec_code':code}
+    sandboxed = FunctionType(sandbox.__code__, scope)
+    try:
+        sandboxed()  # will throw NameError, builtins is not defined
+    except Exception as exception:
+        outputs = None
+        errors = exception
+    else:
+        errors = codeErr.getvalue()
+        outputs = codeOut.getvalue()
+
+    # restore stdout and stderr
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
+    codeOut.close()
+    codeErr.close()
+
+    return outputs, errors
 
 
 class TestApp(App):
