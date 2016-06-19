@@ -36,7 +36,7 @@ def _create_screen(content, name):
     return screen
 
 
-def _run_sandbox(code):
+def _run_sandbox(code, input):
     def sandbox():
         # noinspection PyUnresolvedReferences
         exec(exec_code)
@@ -46,7 +46,7 @@ def _run_sandbox(code):
     sys.stdout = codeOut
     sys.stderr = codeErr
 
-    scope = {'__builtins__': __builtins__, 'exec_code':code}
+    scope = {'__builtins__': __builtins__, 'exec_code':code, 'input': input}
     sandboxed = FunctionType(sandbox.__code__, scope)
     try:
         sandboxed()  # will throw NameError, builtins is not defined
@@ -68,33 +68,50 @@ def _run_sandbox(code):
 
 class TestApp(App):
     def build(self):
-        code = "import datetime\nprint datetime.now().strftime('%Y-%m-%d %H:%M:%S')"
+        def _update_code_output(code, inputs, code_output_widgets):
+            assert len(inputs) == len(code_output_widgets)
+            for input, code_output_widget in zip(inputs, code_output_widgets):
+                output, error = _run_sandbox(code, input)
+                output_display = output if not error else error
+                code_output_widget.text = 'Input: {}  Output: {}'.format(input, output_display)
+
+        inputs = [1, 2, 3, 4]
+        expected_outputs = [2, 3, 4, 5]
+        code = "print(input)"
         parent_layout = ScreenManager()
 
         editor_layout = BoxLayout(orientation='horizontal')
         score_layout = BoxLayout(orientation='vertical')
         input_layout = StackLayout()
         output_layout = StackLayout()
+        code_output_widgets = []
 
         list_box_properties = {
             'size_hint': (1.0, None),
             'height': 20}
 
-        input_layout.add_widget(Label(text='In 1', **list_box_properties))
-        input_layout.add_widget(Label(text='In 2', **list_box_properties))
-        input_layout.add_widget(Label(text='In 3', **list_box_properties))
+        code_input = CodeInput(text=code, lexer=Python3Lexer(), style=BorlandStyle)
 
-        output_layout.add_widget(Label(text='Out 1', **list_box_properties))
-        output_layout.add_widget(Label(text='Out 2', **list_box_properties))
-        output_layout.add_widget(Label(text='Out 3', **list_box_properties))
+        run_code_button = Button(text='Run Code', size_hint=(1.0, 0.1))
+        run_code_button.bind(on_release=lambda _: _update_code_output(code_input.text, inputs, code_output_widgets))
 
-        score_layout.add_widget(Label(text='Input', size_hint=(1.0, 0.1)))
+        for input, expected_output in zip(inputs, expected_outputs):
+            input_layout.add_widget(Label(text='Input: {}  Output: {}'.format(input, expected_output), **list_box_properties))
+
+        for _ in range(len(inputs)):
+            code_output_widget = Label(text='<ERROR>', **list_box_properties)
+            code_output_widgets.append(code_output_widget)
+            output_layout.add_widget(code_output_widget)
+        _update_code_output(code_input.text, inputs, code_output_widgets)
+
+        score_layout.add_widget(run_code_button)
+        score_layout.add_widget(Label(text='Code Goal', size_hint=(1.0, 0.1)))
         score_layout.add_widget(input_layout)
-        score_layout.add_widget(Label(text='Output', size_hint=(1.0, 0.1)))
+        score_layout.add_widget(Label(text='Code Output', size_hint=(1.0, 0.1)))
         score_layout.add_widget(output_layout)
         score_layout.size_hint = (0.3, 1.0)
         editor_layout.add_widget(score_layout)
-        editor_layout.add_widget(CodeInput(text=code, lexer=Python3Lexer(), style=BorlandStyle))
+        editor_layout.add_widget(code_input)
 
         job_layout = BoxLayout(orientation='horizontal')
         job_layout.add_widget(Label(text='TODO'))
