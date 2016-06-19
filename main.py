@@ -5,6 +5,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.codeinput import CodeInput
 from kivy.config import Config
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.stacklayout import StackLayout
 
 from pygments.styles.borland import BorlandStyle
 from pygments.lexers.python import Python3Lexer
@@ -37,10 +38,28 @@ class TestApp(App):
         parent_layout = ScreenManager()
 
         editor_layout = BoxLayout(orientation='horizontal')
-        layout1 = BoxLayout(orientation='vertical')
-        layout1.add_widget(Label(text='Input'))
-        layout1.add_widget(Label(text='Output'))
-        editor_layout.add_widget(layout1)
+        score_layout = BoxLayout(orientation='vertical')
+        input_layout = StackLayout()
+        output_layout = StackLayout()
+
+        list_box_properties = {
+            'size_hint': (1.0, None),
+            'height': 20}
+
+        input_layout.add_widget(Label(text='In 1', **list_box_properties))
+        input_layout.add_widget(Label(text='In 2', **list_box_properties))
+        input_layout.add_widget(Label(text='In 3', **list_box_properties))
+
+        output_layout.add_widget(Label(text='Out 1', **list_box_properties))
+        output_layout.add_widget(Label(text='Out 2', **list_box_properties))
+        output_layout.add_widget(Label(text='Out 3', **list_box_properties))
+
+        score_layout.add_widget(Label(text='Input', size_hint=(1.0, 0.1)))
+        score_layout.add_widget(input_layout)
+        score_layout.add_widget(Label(text='Output', size_hint=(1.0, 0.1)))
+        score_layout.add_widget(output_layout)
+        score_layout.size_hint = (0.3, 1.0)
+        editor_layout.add_widget(score_layout)
         editor_layout.add_widget(CodeInput(text=code, lexer=Python3Lexer(), style=BorlandStyle))
 
         job_layout = BoxLayout(orientation='horizontal')
